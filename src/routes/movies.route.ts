@@ -17,13 +17,14 @@ interface MovieRequest {
   userId: number;
 }
 
+
 //  Listar todos os filmes (GET /api/movies)
 router.get("/", async (req: Request, res: Response, next: NextFunction) => {
   try {
     const movies = await prisma.movie.findMany();
     console.log("Retrieved movies ->", movies);
     res.status(200).json(movies);
-    return;
+    
   } catch (error) {
     console.error("Error while retrieving movies ->", error);
     next(error);
@@ -52,6 +53,8 @@ router.get("/:movieId", async (req: Request, res: Response, next: NextFunction)/
   }
 });
 
+
+
 // - Criar um novo filme (POST /api/movies)
 router.post("/", async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -73,18 +76,38 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
   }
 });
 
-// - Atualizar um filme (PUT /api/movies/:movieId)
-router.put<{ movieId: string }, MovieRequest>("/:movieId", async (req: Request, res: Response, next: NextFunction) => {
+
+// - Atualizar um filme (PUT /api/movies/:movieId) // apenas autenticado no seu perfil pode atualizar
+router.put/* <{ movieId: string }, MovieRequest> */("/:movieId", async (req: Request, res: Response, next: NextFunction) => {
   const { movieId } = req.params;
+  const {title, genre, status, rating, userId} = req.body;
+
   const movieIdNumber = Number(movieId);
 
   if (isNaN(movieIdNumber)) {
-     res.status(400).json({ message: "Invalid Movie ID" });
+    res.status(400).json({ message: "Invalid Movie ID" });
+    return;
   }
 
   try {
-    const { title, genre, status, rating }: MovieRequest = req.body;
+    // Busca o filme 
+    const existingMovie = await prisma.movie.findUnique({
+      where: { id: movieIdNumber },
+    });
 
+    if (!existingMovie) {
+      res.status(404).json({ message: "Movie not found" });
+      return;
+    }
+
+    //se nao for...
+    if (existingMovie.userId !== userId) {
+      res.status(403).json({ message: "You can only edit your own movies!" });
+      return;
+    }
+
+
+    // Se for o usuario
     const updatedMovie = await prisma.movie.update({
       where: { id: movieIdNumber },
       data: { title, genre, status, rating },
@@ -93,9 +116,11 @@ router.put<{ movieId: string }, MovieRequest>("/:movieId", async (req: Request, 
     res.status(200).json(updatedMovie);
   } catch (error) {
     console.log("Error updating movie ->", error);
-    //next(error);
+    next(error);
   }
 });
+
+
 
 // - Obter todos os filmes com um determinado status (GET /api/movies/status/:status)
 router.get("/status/:status", async (req: Request, res: Response, next: NextFunction) => {
@@ -119,23 +144,48 @@ router.get("/status/:status", async (req: Request, res: Response, next: NextFunc
   }
 });
 
+
+
 // - Deletar um filme (DELETE /api/movies/:movieId)
 router.delete("/:movieId", async (req: Request, res: Response, next: NextFunction) => {
   const { movieId } = req.params;
+  const {userId} = req.body;
+
   const movieIdNumber = Number(movieId);
 
   if (isNaN(movieIdNumber)) {
     res.status(400).json({ message: "Invalid Movie ID" });
+    return;
   }
 
   try {
-    const deletedMovie = await prisma.movie.delete({ where: { id: movieIdNumber } });
+    // mesma ideia do put
+    const existingMovie = await prisma.movie.findUnique({
+      where: { id: movieIdNumber },
+    });
 
-    res.status(200).json({ message: `Movie with ID ${deletedMovie.id} was deleted successfully` });
+    if (!existingMovie) {
+      res.status(404).json({ message: "Movie not found" });
+      return;
+    }
+
+
+    if (existingMovie.userId !== userId) {
+      res.status(403).json({ message: "You can only delete your own movies!" });
+      return;
+    }
+
+  
+    await prisma.movie.delete({ where: { id: movieIdNumber } });
+
+
+    res.status(200).json({ message: `Movie with ID ${movieId} was deleted successfully` });
   } catch (error) {
     console.log("Error deleting movie ->", error);
     next(error);
   }
 });
+
+
 
 export default router;
