@@ -9,7 +9,7 @@ export default (app: Application) => {
   });
 
   app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-    
+
     // always logs the next(err)
     console.error("ERROR", req.method, req.path, err);
 
@@ -21,5 +21,6 @@ export default (app: Application) => {
           message: "Internal server error. Check the server console",
         });
     }
+    next(err);
   });
 };

@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+dotenv.config();
 import prisma from "./db/index";
 
 dotenv.config();
@@ -28,5 +29,5 @@ app.get("/test-db", async (req, res) => {
 const PORT = process.env.PORT || 5005;
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server is running on port ${PORT}`);
+  console.log(`🚀 Server is running on port http://localhost:${PORT}`);
 });
