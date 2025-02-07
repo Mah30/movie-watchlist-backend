@@ -38,7 +38,7 @@ model Movie {
   title     String
   genre     String
   status    String  // "To Watch" or "Watched"
-  /* rating    Int?  */   // Nota do usuário (opcional, 0-10)
+  rating    Int?     // Nota do usuário (opcional, 0-10)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   userId    Int
