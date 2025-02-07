@@ -1,10 +1,11 @@
-import express, { Request, Response, NextFunction } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import { PrismaClient } from "@prisma/client";
 
+
+const router = Router();
 /* const router = express.Router(); */
 const prisma = new PrismaClient();
 /* const express = require('express'); */
-const router = Router();
 
 
 // corpo da requisição de Movie
@@ -22,6 +23,7 @@ router.get("/", async (req: Request, res: Response, next: NextFunction) => {
     const movies = await prisma.movie.findMany();
     console.log("Retrieved movies ->", movies);
     res.status(200).json(movies);
+    return;
   } catch (error) {
     console.error("Error while retrieving movies ->", error);
     next(error);
@@ -29,18 +31,19 @@ router.get("/", async (req: Request, res: Response, next: NextFunction) => {
 });
 
 // -  (GET /api/movies/:movieId) - Obtem um filme específico por ID
-router.get("/:movieId", async (req: Request, res: Response, next: NextFunction) => {
+router.get("/:movieId", async (req: Request, res: Response, next: NextFunction)/* : Promise<void>  */=> {
   const { movieId } = req.params;
   const movieIdNumber = Number(movieId);
 
   if (isNaN(movieIdNumber)) {
-    return res.status(400).json({ message: "Invalid Movie ID" });
+     res.status(400).json({ message: "Invalid Movie ID" });
+    
   }
 
   try {
     const movie = await prisma.movie.findUnique({ where: { id: movieIdNumber } });
     if (!movie) {
-      return res.status(404).json({ message: "Movie not found" });
+      res.status(404).json({ message: "Movie not found" });
     }
     res.status(200).json(movie);
   } catch (error) {
@@ -52,10 +55,14 @@ router.get("/:movieId", async (req: Request, res: Response, next: NextFunction) 
 // - Criar um novo filme (POST /api/movies)
 router.post("/", async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { title, genre, status, rating }: MovieRequest = req.body;
+    const { title, genre, status, rating, userId }: MovieRequest = req.body;
+
+    if (!userId) {
+       res.status(400).json({message: "User ID is required to create a movie"});
+    }
 
     const createdMovie = await prisma.movie.create({
-      data: { title, genre, status, rating },
+      data: { title, genre, status, rating, userId },
     });
 
     console.log("Movie added ->", createdMovie);
@@ -72,7 +79,7 @@ router.put<{ movieId: string }, MovieRequest>("/:movieId", async (req: Request, 
   const movieIdNumber = Number(movieId);
 
   if (isNaN(movieIdNumber)) {
-    return res.status(400).json({ message: "Invalid Movie ID" });
+     res.status(400).json({ message: "Invalid Movie ID" });
   }
 
   try {
@@ -95,14 +102,14 @@ router.get("/status/:status", async (req: Request, res: Response, next: NextFunc
   const { status } = req.params;
 
   if (status !== "To Watch" && status !== "Watched") {
-    return res.status(400).json({ message: "Invalid status. Use 'To Watch' or 'Watched'." });
+     res.status(400).json({ message: "Invalid status. Use 'To Watch' or 'Watched'." });
   }
 
   try {
     const movies = await prisma.movie.findMany({ where: { status } });
 
     if (!movies.length) {
-      return res.status(404).json({ message: "No movies found with this status" });
+       res.status(404).json({ message: "No movies found with this status" });
     }
 
     res.status(200).json(movies);
@@ -118,7 +125,7 @@ router.delete("/:movieId", async (req: Request, res: Response, next: NextFunctio
   const movieIdNumber = Number(movieId);
 
   if (isNaN(movieIdNumber)) {
-    return res.status(400).json({ message: "Invalid Movie ID" });
+    res.status(400).json({ message: "Invalid Movie ID" });
   }
 
   try {

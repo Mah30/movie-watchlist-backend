@@ -36,7 +36,7 @@ model User {
 model Movie {
   id        Int     @id @default(autoincrement())
   title     String
-  genre     String
+  genre     String 
   status    String  // "To Watch" or "Watched"
   rating    Int?     // Nota do usuário (opcional, 0-10)
   createdAt DateTime @default(now())
