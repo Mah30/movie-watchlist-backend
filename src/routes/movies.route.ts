@@ -1,5 +1,6 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { PrismaClient } from "@prisma/client";
+import { isAuthenticated } from "../middlewares/route-guard.middleware";
 
 
 const router = Router();
@@ -54,13 +55,19 @@ router.get("/:movieId", async (req: Request, res: Response, next: NextFunction):
 
 
 // - Criar um novo filme (POST /api/movies)
-router.post("/", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+router.post("/", isAuthenticated, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { title, genre, status, rating, userId }: MovieRequest = req.body;
 
     if (!userId) {
        res.status(400).json({message: "User ID is required to create a movie"});
        return;
+    }
+
+
+    if (!(userId == req.user?.id || req.user?.isAdmin)) {
+      res.status(403).json({ message: "You cannot create a movie for another user!"});
+      return;
     }
 
     const createdMovie = await prisma.movie.create({
@@ -77,9 +84,9 @@ router.post("/", async (req: Request, res: Response, next: NextFunction): Promis
 
 
 // - Atualizar um filme (PUT /api/movies/:movieId) // apenas autenticado no seu perfil pode atualizar
-router.put("/:movieId", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+router.put("/:movieId", isAuthenticated, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   const { movieId } = req.params;
-  const {title, genre, status, rating, userId} = req.body;
+  const {title, genre, status, rating} = req.body;
 
   const movieIdNumber = Number(movieId);
 
@@ -100,7 +107,7 @@ router.put("/:movieId", async (req: Request, res: Response, next: NextFunction):
     }
 
     //se nao for...
-    if (existingMovie.userId !== userId) {
+    if (!(existingMovie.userId == req.user?.id || req.user?.isAdmin)) {
       res.status(403).json({ message: "You can only edit your own movies!" });
       return;
     }
@@ -148,9 +155,8 @@ router.get("/status/:status", async (req: Request, res: Response, next: NextFunc
 
 
 // - Deletar um filme (DELETE /api/movies/:movieId)
-router.delete("/:movieId", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+router.delete("/:movieId", isAuthenticated, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   const { movieId } = req.params;
-  const {userId} = req.body;
 
   const movieIdNumber = Number(movieId);
 
@@ -171,7 +177,7 @@ router.delete("/:movieId", async (req: Request, res: Response, next: NextFunctio
     }
 
 
-    if (existingMovie.userId !== userId) {
+    if (existingMovie.userId !== req.user?.id) {
       res.status(403).json({ message: "You can only delete your own movies!" });
       return;
     }
