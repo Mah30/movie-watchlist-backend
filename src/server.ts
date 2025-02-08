@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 dotenv.config();
 import prisma from "./db/index";
+import router from "./routes/index.routes";
 
 dotenv.config();
 
@@ -14,6 +15,12 @@ app.use(cors());
 
 app.get("/", (req, res) => {
   res.send("Movie Watchlist API is running! 🚀");
+});
+
+// Routes
+app.use("/api", router);
+app.use((req, res) => {
+  res.status(404).json({ message: "Endpoint not found" });
 });
 
 // 🚀 Endpoint de teste do Prisma

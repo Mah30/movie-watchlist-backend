@@ -26,11 +26,13 @@ datasource db {
 } */
 
 model User {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String   @unique
-  password  String
-  movies    Movie[]
+  id            Int      @id @default(autoincrement())
+  firstName     String
+  lastName      String
+  email         String   @unique
+  passwordHash  String
+  movies        Movie[]
+  isAdmin       Boolean  @default(false)
 }
 
 model Movie {

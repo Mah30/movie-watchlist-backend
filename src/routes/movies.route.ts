@@ -3,9 +3,7 @@ import { PrismaClient } from "@prisma/client";
 
 
 const router = Router();
-/* const router = express.Router(); */
 const prisma = new PrismaClient();
-/* const express = require('express'); */
 
 
 // corpo da requisição de Movie
@@ -19,12 +17,11 @@ interface MovieRequest {
 
 
 //  Listar todos os filmes (GET /api/movies)
-router.get("/", async (req: Request, res: Response, next: NextFunction) => {
+router.get("/", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const movies = await prisma.movie.findMany();
     console.log("Retrieved movies ->", movies);
     res.status(200).json(movies);
-    
   } catch (error) {
     console.error("Error while retrieving movies ->", error);
     next(error);
@@ -32,19 +29,20 @@ router.get("/", async (req: Request, res: Response, next: NextFunction) => {
 });
 
 // -  (GET /api/movies/:movieId) - Obtem um filme específico por ID
-router.get("/:movieId", async (req: Request, res: Response, next: NextFunction)/* : Promise<void>  */=> {
+router.get("/:movieId", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   const { movieId } = req.params;
   const movieIdNumber = Number(movieId);
 
   if (isNaN(movieIdNumber)) {
-     res.status(400).json({ message: "Invalid Movie ID" });
-    
+     res.status(400).json({ message: "Invalid Movie ID"  });
+     return;
   }
 
   try {
     const movie = await prisma.movie.findUnique({ where: { id: movieIdNumber } });
     if (!movie) {
       res.status(404).json({ message: "Movie not found" });
+      return;
     }
     res.status(200).json(movie);
   } catch (error) {
@@ -56,12 +54,13 @@ router.get("/:movieId", async (req: Request, res: Response, next: NextFunction)/
 
 
 // - Criar um novo filme (POST /api/movies)
-router.post("/", async (req: Request, res: Response, next: NextFunction) => {
+router.post("/", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { title, genre, status, rating, userId }: MovieRequest = req.body;
 
     if (!userId) {
        res.status(400).json({message: "User ID is required to create a movie"});
+       return;
     }
 
     const createdMovie = await prisma.movie.create({
@@ -78,7 +77,7 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
 
 
 // - Atualizar um filme (PUT /api/movies/:movieId) // apenas autenticado no seu perfil pode atualizar
-router.put/* <{ movieId: string }, MovieRequest> */("/:movieId", async (req: Request, res: Response, next: NextFunction) => {
+router.put("/:movieId", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   const { movieId } = req.params;
   const {title, genre, status, rating, userId} = req.body;
 
@@ -123,11 +122,12 @@ router.put/* <{ movieId: string }, MovieRequest> */("/:movieId", async (req: Req
 
 
 // - Obter todos os filmes com um determinado status (GET /api/movies/status/:status)
-router.get("/status/:status", async (req: Request, res: Response, next: NextFunction) => {
+router.get("/status/:status", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   const { status } = req.params;
 
   if (status !== "To Watch" && status !== "Watched") {
      res.status(400).json({ message: "Invalid status. Use 'To Watch' or 'Watched'." });
+     return;
   }
 
   try {
@@ -135,6 +135,7 @@ router.get("/status/:status", async (req: Request, res: Response, next: NextFunc
 
     if (!movies.length) {
        res.status(404).json({ message: "No movies found with this status" });
+       return;
     }
 
     res.status(200).json(movies);
@@ -147,7 +148,7 @@ router.get("/status/:status", async (req: Request, res: Response, next: NextFunc
 
 
 // - Deletar um filme (DELETE /api/movies/:movieId)
-router.delete("/:movieId", async (req: Request, res: Response, next: NextFunction) => {
+router.delete("/:movieId", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   const { movieId } = req.params;
   const {userId} = req.body;
 
