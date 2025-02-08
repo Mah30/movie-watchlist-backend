@@ -1,6 +1,8 @@
 import express, { Request, Response, NextFunction } from "express";
 import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcrypt";
 import { isAdmin, isAuthenticated } from "../middlewares/route-guard.middleware";
+import { hashPassword } from "../user";
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -10,11 +12,7 @@ interface UserRequest {
   firstName: string;
   lastName: string;
   email: string;
-  phone: string;
-  languages?: string[];
-  image?: string;
-  age?: number;
-  passwordHash: string;
+  password: string;
   isAdmin?: boolean;
 }
 
@@ -56,9 +54,8 @@ router.get("/:userId", isAuthenticated, async (req: Request, res: Response, next
 router.post("/", isAuthenticated, isAdmin, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const newUser: UserRequest = req.body;
-
     const createdUser = await prisma.user.create({
-      data: newUser,
+      data: hashPassword(newUser),
     });
 
     console.log("User added ->", createdUser);
@@ -74,13 +71,16 @@ router.put("/:userId", isAuthenticated, async (req: Request, res: Response, next
   const { userId } = req.params;
 
   if (!(Number(userId) === req.user?.id || req.user?.isAdmin)) {
-    return void res.status(403).json({ message: "You cannot change the data of another user!" });
+    res.status(403).json({ message: "You cannot change the data of another user!" });
+    return;
   }
+
+  const updatedUser: UserRequest = req.body;
 
   try {
     const updatedUser = await prisma.user.update({
       where: { id: Number(userId) },
-      data: req.body,
+      data: hashPassword(req.body),
     });
 
     res.status(200).json(updatedUser);
