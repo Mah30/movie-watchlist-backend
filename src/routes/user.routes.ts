@@ -7,7 +7,7 @@ import { hashPassword } from "../user";
 const router = express.Router();
 const prisma = new PrismaClient();
 
-// 📌 Interface para definir os dados do usuário
+// Interface para definir os dados do usuário
 interface UserRequest {
   firstName: string;
   lastName: string;
@@ -16,7 +16,7 @@ interface UserRequest {
   isAdmin?: boolean;
 }
 
-// 📌 GET /api/users - Retorna todos os usuários (Somente Admin)
+// GET /api/users - Retorna todos os usuários (Somente Admin)
 router.get("/", isAuthenticated, isAdmin, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const users = await prisma.user.findMany();
@@ -50,7 +50,7 @@ router.get("/:userId", isAuthenticated, async (req: Request, res: Response, next
   }
 });
 
-// 📌 POST /api/users - Cria um novo usuário (Somente Admin)
+// POST /api/users - Cria um novo usuário (Somente Admin)
 router.post("/", isAuthenticated, isAdmin, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const newUser: UserRequest = req.body;
@@ -66,7 +66,7 @@ router.post("/", isAuthenticated, isAdmin, async (req: Request, res: Response, n
   }
 });
 
-// 📌 PUT /api/users/:userId - Atualiza um usuário específico
+// PUT /api/users/:userId - Atualiza um usuário específico
 router.put("/:userId", isAuthenticated, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   const { userId } = req.params;
 
@@ -90,7 +90,7 @@ router.put("/:userId", isAuthenticated, async (req: Request, res: Response, next
   }
 });
 
-// 📌 DELETE /api/users/:userId - Deleta um usuário (Somente Admin)
+// DELETE /api/users/:userId - Deleta um usuário (Somente Admin)
 router.delete("/:userId", isAuthenticated, isAdmin, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     await prisma.user.delete({ where: { id: Number(req.params.userId) } });

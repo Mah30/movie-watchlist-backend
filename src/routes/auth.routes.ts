@@ -8,7 +8,7 @@ import { UserRequest, hashPassword } from "../user";
 export const router = express.Router();
 export const prisma = new PrismaClient();
 
-// 📌 POST /api/auth/signup - User Registration
+// POST /api/auth/signup - User Registration
 router.post("/signup", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   const { firstName, lastName, email, password }: UserRequest = req.body;
 
@@ -40,7 +40,7 @@ router.post("/signup", async (req: Request, res: Response, next: NextFunction): 
 
 });
 
-// 📌 POST /api/auth/login - User Login
+// POST /api/auth/login - User Login
 router.post("/login", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   const { email, password } = req.body;
 
@@ -76,7 +76,7 @@ router.post("/login", async (req: Request, res: Response, next: NextFunction): P
   }
 });
 
-// 📌 GET /api/auth/verify - Verify Authentication Token
+// GET /api/auth/verify - Verify Authentication Token
 router.get("/verify", isAuthenticated, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const currentUser = await prisma.user.findUnique({ where: { id: req.user?.id } });

@@ -17,7 +17,7 @@ interface UserMovieRequest {
   rating?: number;
 }
 
-// ✅ Atualizamos a tipagem de `AuthenticatedRequest` para usar `TokenPayload`
+// atualizacao a tipagem de `AuthenticatedRequest` para usar `TokenPayload`
 interface AuthenticatedRequest extends Request {
   user: TokenPayload;
 }
