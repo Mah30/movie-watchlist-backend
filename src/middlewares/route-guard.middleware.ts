@@ -29,10 +29,11 @@ export const isAuthenticated = (req: Request, res: Response, next: NextFunction)
     // Verificando e decodificando o token
     const payload = jwt.verify(token, process.env.TOKEN_SECRET as string) as TokenPayload & JwtPayload;
 
+    
     // Anexando os dados do usuário à requisição
     req.user = payload;
 
-    next(); // Passa para a próxima rota
+    next(); 
   } catch (error: any) {
     console.error("Authentication error:", error.message);
 
@@ -44,7 +45,9 @@ export const isAuthenticated = (req: Request, res: Response, next: NextFunction)
 
     return void res.status(500).json({ message: "Internal server error during authentication" });
   }
-};// 📌 Middleware para verificar se o usuário é admin
+
+
+};//  Middleware para verificar se o usuário é admin
 export const isAdmin = (req: Request, res: Response, next: NextFunction): void => {
     if (!req.user?.isAdmin) {
         res.status(403).json({ message: "Need admin permissions" });

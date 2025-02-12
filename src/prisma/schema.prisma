@@ -31,7 +31,7 @@ model User {
   lastName      String
   email         String   @unique
   passwordHash  String
-  movies        Movie[]
+  watchlist     UserMovie[]
   isAdmin       Boolean  @default(false)
 }
 
@@ -39,11 +39,23 @@ model Movie {
   id        Int     @id @default(autoincrement())
   title     String
   genre     String 
-  status    String  // "To Watch" or "Watched"
-  rating    Int?     // Nota do usuário (opcional, 0-10)
+  /* status    String  
+  rating    Int?     */ 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  userId    Int
-  user      User    @relation(fields: [userId], references: [id])
+  watchlist UserMovie[]
   
+}
+
+model UserMovie {
+  id        Int     @id @default(autoincrement())
+  user      User    @relation(fields: [userId], references: [id])
+  userId    Int
+  movie     Movie   @relation(fields: [movieId], references: [id])
+  movieId   Int
+  status    String  @default("To Watch") // "To Watch"  "Watched"
+  rating    Int?    // Nota do usuário (opcional, 0-10)
+  createdAt DateTime @default(now())
+  
+  @@unique([userId, movieId]) // Evita duplicação de registros para o mesmo usuário e filme
 }
